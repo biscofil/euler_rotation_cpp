@@ -7,6 +7,13 @@ make
 ./quaternions
 ```
 
+```c++
+    vec<double, 3> theta = {{0.1, 0.1, 0.1}}; // rotation
+    vec<double, 3> omega = {{0, 0, 0}}; // rotational velocity
+    vec<double, 3> alpha = {{0, 0.2, 0.1}}; // rotational acceleration
+    float deltaT = 0.1;
+```
+
 ```csv
 -0.43863	0.763696	0.47368
 -0.438836	0.763455	0.473878

@@ -72,14 +72,16 @@ int main() {
 
     vec<double, 3> omega = {{0, 0, 0}}; // rotational velocity
 
-    vec<double, 3> alpha = {{0, 0.002, 0.01}}; // rotational acceleration
+    vec<double, 3> alpha = {{0, 0.2, 0.1}}; // rotational acceleration
 
     mat<double, 3, 3> M;
     mat<double, 3, 3> LIB;
 
+    float deltaT = 0.1;
+
     for (int i = 0; i < 100; i += 1) {
 
-        omega += alpha;
+        omega += alpha * deltaT;
 
         M = getRotationMatrix(theta);
 
@@ -87,7 +89,7 @@ int main() {
 
         // std::cout << "d:\t" << X(angleDot) << "\t"<< Y(angleDot) << "\t"<< Z(angleDot) << "\t" << std::endl;
 
-        theta += angleDot;
+        theta += angleDot * deltaT;
 
         // std::cout << "a:\t" << X(angle) << "\t"<< Y(angle) << "\t"<< Z(angle) << "\t" << std::endl;
 

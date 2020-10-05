@@ -1,113 +1,66 @@
 #include <iostream>
-
-#include <boost/qvm/all.hpp>
-
-using namespace boost::qvm;
-using namespace std;
+#include <memory>
+#include <thread>
+#include "Simulation.h"
+#include "ui.h"
 
 /**
- * Returns the rotation matrix that converts Inertial (global) coordinates into Body (Local) coordinates
- * @param angle
- * @return
+ *
+ * @param simulation
  */
-inline mat<double, 3, 3> getLIB(const vec<double, 3> &angle) {
-
-    auto psi = X(angle);
-    auto theta = Y(angle);
-    auto fi = Z(angle);
-
-    auto c_psi = std::cos(psi);
-    auto s_psi = std::sin(psi);
-    auto c_theta = std::cos(theta);
-    auto s_theta = std::sin(theta);
-    auto c_fi = std::cos(fi);
-    auto s_fi = std::sin(fi);
-
-    return {{
-                    {
-                            (c_fi * c_psi) - (s_fi * c_theta * s_psi),
-                            -(c_fi * c_theta * s_psi) - (s_fi * c_psi),
-                            s_theta * s_psi
-                    },
-                    {
-                            (s_fi * c_theta * c_psi) + (c_fi * s_psi),
-                            (c_fi * c_theta * c_psi) - (s_fi * s_psi),
-                            -s_theta * c_psi
-                    },
-                    {
-                            c_fi * s_theta,
-                            c_fi * s_theta,
-                            c_theta
-                    }
-            }};
+void uiThreadFunc(std::shared_ptr<Simulation> simulation) {
+    std::cout << "Starting UI Thread" << std::endl;
+    char **p = nullptr;
+    UI(0, p, simulation);
 }
 
 /**
  *
- * @param angle
- * @return
+ * @param simulation
  */
-inline mat<double, 3, 3> getRotationMatrix(const vec<double, 3> &angle) {
+void physicsThreadFunc(std::shared_ptr<Simulation> simulation) {
 
-    auto theta = Y(angle);
-    auto fi = Z(angle);
+    // wait two seconds before starting physics simulation
+    std::this_thread::sleep_for(std::chrono::seconds(2));
 
-    auto s_theta = std::sin(theta);
-    auto c_fi = std::cos(fi);
-    auto s_fi = std::sin(fi);
-    auto t_theta = std::tan(theta);
+    std::cout << "Starting Physics Thread" << std::endl;
 
-    return {{
-                    {s_fi / s_theta, c_fi / s_theta, 0.0},
-                    {c_fi, -s_fi, 0.0},
-                    {-s_fi / t_theta, -c_fi / t_theta, 1.0}
-            }};
+    unsigned int threadMillisecDeltaT = 100; // 10 milliseconds
+    double threadSecDeltaT = threadMillisecDeltaT / 1000.0; // in seconds
+
+    simulation->deltaT = threadSecDeltaT;
+
+    while (simulation->t >= 0) {
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(threadMillisecDeltaT));
+
+        //std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
+        simulation->simulateStep();
+
+        // usually takes 4000[ns]
+        //std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+        //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
+
+    }
+
+    //std::cout << "Took " << simulation.t << " sec" << std::endl;
+
 }
+
 
 int main() {
 
-    const vec<double, 3> vector = {{-0.27, 0.87, 0.41}};
+    auto simulation = std::make_shared<Simulation>();
 
-    vec<double, 3> theta = {{0.1, 0.1, 0.1}}; // rotation
+    std::thread uiThread = std::thread(uiThreadFunc, simulation);
 
-    vec<double, 3> omega = {{0, 0, 0}}; // rotational velocity
+    //std::thread physicsThread(physicsThreadFunc, simulation);
 
-    vec<double, 3> alpha = {{0, 0.2, 0.1}}; // rotational acceleration
+    uiThread.join();
 
-    mat<double, 3, 3> M;
-    mat<double, 3, 3> LIB;
-
-    float deltaT = 0.1;
-
-    for (int i = 0; i < 100; i += 1) {
-
-        omega += alpha * deltaT;
-
-        M = getRotationMatrix(theta);
-
-        auto angleDot = M * omega;
-
-        // std::cout << "d:\t" << X(angleDot) << "\t"<< Y(angleDot) << "\t"<< Z(angleDot) << "\t" << std::endl;
-
-        theta += angleDot * deltaT;
-
-        // std::cout << "a:\t" << X(angle) << "\t"<< Y(angle) << "\t"<< Z(angle) << "\t" << std::endl;
-
-        LIB = getLIB(theta);
-
-        /*std::cout << "[\t" << A00(LIB) << "\t" << A01(LIB) << "\t" << A02(LIB) << std::endl
-                  << "\t" << A10(LIB) << "\t" << A11(LIB) << "\t" << A12(LIB) << std::endl
-                  << "\t" << A20(LIB) << "\t" << A21(LIB) << "\t" << A22(LIB) << "]" << std::endl;*/
-
-        //std::cout << std::sqrt(std::pow(X(vector), 2) + std::pow(Y(vector), 2) + std::pow(Z(vector), 2)) << std::endl;
-
-        auto k = LIB * vector;
-        double norm = std::sqrt(std::pow(X(k), 2) + std::pow(Y(k), 2) + std::pow(Z(k), 2));
-        k = k / norm;
-
-        std::cout << X(k) << "\t" << Y(k) << "\t" << Z(k) << std::endl;
-
-    }
+    //physicsThread.join();
 
     return 0;
 

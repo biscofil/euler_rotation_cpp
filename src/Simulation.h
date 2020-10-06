@@ -35,12 +35,12 @@ public:
     float t = 0;
     float deltaT = 0.01;
 
-    quat<double> theta_quat = vect3_to_quat({{0, 0, 0}}, 1);
+    quat<double> theta = vect3_to_quat({{0, 0, 0}}, 1);
     vec<double, 3> omega = {{0, 0, 0}}; // rotational velocity
     vec<double, 3> alpha = {{0, 0.0, 0}}; // rotational acceleration
     vec<double, 3> torque = {{0, 0, 0}}; // torque
 
-    mat<double, 4, 4> M_quat;
+    mat<double, 4, 4> M;
 
     Simulation() : I({{
                               {Mx(), 0, 0},
@@ -48,7 +48,7 @@ public:
                               {0, 0, Mz()}
                       }}),
                    invI(inverse(I)) {
-        normalize(theta_quat);
+        normalize(theta);
     }
 
     constexpr double Mx() const {
@@ -68,13 +68,13 @@ public:
      * @param omega
      * @return
      */
-    void computeQuatRotationMatrix(const vec<double, 3> &omega) {
+    void computeQuaternionRotationMatrix() {
 
         auto o1 = X(omega) * 0.5;
         auto o2 = Y(omega) * 0.5;
         auto o3 = Z(omega) * 0.5;
 
-        M_quat = {{
+        M = {{
                           {0, -o1, -o2, -o3},
                           {o1, 0, o3, -o2},
                           {o2, -o3, 0, o1},
@@ -101,12 +101,12 @@ public:
 
         omega += alpha * deltaT;
 
-        computeQuatRotationMatrix(omega);
+        computeQuaternionRotationMatrix();
 
-        auto angleDot = vect4_to_quat(M_quat * quat_to_vect4(theta_quat));
+        auto angleDot = vect4_to_quat(M * quat_to_vect4(theta));
 
-        theta_quat += angleDot * deltaT;
-        normalize(theta_quat);
+        theta += angleDot * deltaT;
+        normalize(theta);
 
     }
 
@@ -117,7 +117,7 @@ public:
 
         simulateStep();
 
-        glPushQuaternionRotationMatrix(theta_quat); // rot
+        glPushQuaternionRotationMatrix(theta); // rot
 
         glColor3ub(255, 0, 0);
         glBegin(GL_LINES);

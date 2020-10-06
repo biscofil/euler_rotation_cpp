@@ -24,12 +24,22 @@ inline quat<double> vect3_to_quat(const vec<double, 3> &v, double s = 0) {
     return {{s, X(v), Y(v), Z(v)}};
 }
 
-inline quat<double> vect4_to_quat(const vec<double, 4> &v) {
-    return {{X(v), Y(v), Z(v), W(v)}};
-}
-
 inline vec<double, 3> quat_to_vec3(const quat<double> &q) {
     return {{X(q), Y(q), Z(q)}};
+}
+
+/**
+ *
+ * @param v
+ * @param q
+ * @return
+ */
+inline vec<double, 3> rotate_vec3_by_quat(const vec<double, 3> &v, const quat<double> &q) {
+    return normalize_vec3(quat_to_vec3(q * vect3_to_quat(v) * conjugate(q)));
+}
+
+inline quat<double> vect4_to_quat(const vec<double, 4> &v) {
+    return {{X(v), Y(v), Z(v), W(v)}};
 }
 
 inline vec<double, 4> quat_to_vect4(const quat<double> &q) {

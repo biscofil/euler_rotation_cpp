@@ -67,7 +67,6 @@ void UI::idle(int) {
     glutTimerFunc(1000 / FPS, idle, 0);
 }
 
-
 void UI::drawOverlay() {
 
     bool lightingOn = glIsEnabled(GL_LIGHTING);

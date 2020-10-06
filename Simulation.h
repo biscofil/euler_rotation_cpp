@@ -9,6 +9,8 @@
 #include <boost/qvm/all.hpp>
 #include <iostream>
 #include <GL/gl.h>
+#include "qvm_utils.h"
+#include "ui.h"
 
 using namespace boost::qvm;
 using namespace std;
@@ -26,12 +28,18 @@ public:
     /*const vec<double, 3> vector = {{-0.27, 0.87, 0.41}};
     vec<double, 3> rotatedVector;*/
 
-    vec<double, 3> theta = {{0.1, 0.1, 0.1}}; // rotation
+    vec<double, 3> theta_vector = {{0, 0, 0}}; // rotation
+    quat<double> theta_quat = vect3_to_quat(theta_vector, 1);
     vec<double, 3> omega = {{0, 0, 0}}; // rotational velocity
-    vec<double, 3> alpha = {{0, 0.1, 0}}; // rotational acceleration
+    vec<double, 3> alpha = {{0, 0.0, 0}}; // rotational acceleration
 
-    mat<double, 3, 3> M;
+    mat<double, 3, 3> M_vector;
     mat<double, 3, 3> LIB;
+    mat<double, 4, 4> M_quat;
+
+    Simulation() {
+        normalize(theta_quat);
+    }
 
     /**
      * Returns the rotation matrix that converts Inertial (global) coordinates into Body (Local) coordinates
@@ -75,7 +83,7 @@ public:
      * @param angle
      * @return
      */
-    inline mat<double, 3, 3> getRotationMatrix(const vec<double, 3> &angle) {
+    inline mat<double, 3, 3> getVecRotationMatrix(const vec<double, 3> &angle) {
 
         auto theta = Y(angle);
         auto fi = Z(angle);
@@ -94,37 +102,69 @@ public:
 
     /**
      *
+     * @param omega
+     * @return
+     */
+    inline mat<double, 4, 4> getQuatRotationMatrix(const vec<double, 3> &omega) {
+
+        auto o1 = X(omega) * 0.5;
+        auto o2 = Y(omega) * 0.5;
+        auto o3 = Z(omega) * 0.5;
+
+        return {{
+                        {0, -o1, -o2, -o3},
+                        {o1, 0, o3, -o2},
+                        {o2, -o3, 0, o1},
+                        {o3, o2, -o1, 0}
+                }};
+    }
+
+    /**
+     *
      */
     void simulateStep() {
+
+        Z(alpha) = std::sin(t);
 
         t += deltaT;
 
         omega += alpha * deltaT;
 
-        M = getRotationMatrix(theta);
+        // vector
+        try {
+            M_vector = getVecRotationMatrix(theta_vector);
 
-        auto angleDot = M * omega;
+            auto angleDot = M_vector * omega;
 
-        // std::cout << "d:\t" << X(angleDot) << "\t"<< Y(angleDot) << "\t"<< Z(angleDot) << "\t" << std::endl;
+            // std::cout << "d:\t" << X(angleDot) << "\t"<< Y(angleDot) << "\t"<< Z(angleDot) << "\t" << std::endl;
 
-        theta += angleDot * deltaT;
+            theta_vector += angleDot * deltaT;
 
-        // std::cout << "a:\t" << X(angle) << "\t"<< Y(angle) << "\t"<< Z(angle) << "\t" << std::endl;
+            // std::cout << "a:\t" << X(angle) << "\t"<< Y(angle) << "\t"<< Z(angle) << "\t" << std::endl;
 
-        LIB = getLIB(theta);
+            LIB = getLIB(theta_vector);
+        } catch (...) {
+            cout << "Step > Vector error" << endl;
+        }
 
-        /*std::cout << "[\t" << A00(LIB) << "\t" << A01(LIB) << "\t" << A02(LIB) << std::endl
-                  << "\t" << A10(LIB) << "\t" << A11(LIB) << "\t" << A12(LIB) << std::endl
-                  << "\t" << A20(LIB) << "\t" << A21(LIB) << "\t" << A22(LIB) << "]" << std::endl;*/
+        // quat
+        try {
 
-        //std::cout << std::sqrt(std::pow(X(vector), 2) + std::pow(Y(vector), 2) + std::pow(Z(vector), 2)) << std::endl;
+            M_quat = getQuatRotationMatrix(omega);
 
-        /*rotatedVector = LIB * vector;
-        double norm = std::sqrt(
-                std::pow(X(rotatedVector), 2) + std::pow(Y(rotatedVector), 2) + std::pow(Z(rotatedVector), 2));
-        rotatedVector = rotatedVector / norm;*/
+            auto angleDot = vect4_to_quat(M_quat * quat_to_vect4(theta_quat));
+            //normalize(angleDot);
+            //std::cout << S(angleDot) << "\t" << X(angleDot) << "\t" << Y(angleDot) << "\t" << Z(angleDot) << std::endl;
 
-        // std::cout << X(k) << "\t" << Y(k) << "\t" << Z(k) << std::endl;
+            theta_quat += angleDot * deltaT;
+            normalize(theta_quat);
+            //theta = (angleDot * theta) * deltaT;
+            //normalize(theta);
+
+        } catch (...) {
+            cout << "Step > Quat error" << endl;
+        }
+
 
     }
 
@@ -134,28 +174,37 @@ public:
      */
     void computeAndDraw(const vec<double, 3> &v) {
 
-        auto rotatedVector = LIB * v;
-        double norm = std::sqrt(
-                std::pow(X(rotatedVector), 2)
-                + std::pow(Y(rotatedVector), 2)
-                + std::pow(Z(rotatedVector), 2));
-        rotatedVector = rotatedVector / norm;
+        // vec
+        try {
+            auto rotatedVector = LIB * v;
+            double norm = std::sqrt(
+                    std::pow(X(rotatedVector), 2)
+                    + std::pow(Y(rotatedVector), 2)
+                    + std::pow(Z(rotatedVector), 2));
+            rotatedVector = rotatedVector / norm;
 
-        glBegin(GL_LINES);
-        glVertex3f(0, 0, 0);
-        glVertex3f(X(rotatedVector), Y(rotatedVector), Z(rotatedVector));
-        glEnd();
+            UI::drawVector(rotatedVector);
 
-        glPushAttrib(GL_ENABLE_BIT);  // dashed
-        glLineStipple(4, 0xAAAA);
-        glEnable(GL_LINE_STIPPLE);
+        } catch (...) {
+            cout << "UI > Vector error" << endl;
+        }
 
-        glBegin(GL_LINES);
-        glVertex3f(X(rotatedVector), Y(rotatedVector), Z(rotatedVector));
-        glVertex3f(X(rotatedVector), 0, Z(rotatedVector));
-        glEnd();
+        // quat
+        try {
 
-        glPopAttrib();
+            glColor3ub(255, 255, 255);
+
+            auto rotatedVec = theta_quat * vect3_to_quat(v) * conjugate(theta_quat);
+
+            auto k = quat_to_vec3(rotatedVec);
+            //auto k = rotatedVec;
+            k = normalize_vec3(k);
+
+            UI::drawVector(k);
+
+        } catch (...) {
+            cout << "UI > Quat error" << endl;
+        }
 
     }
 
@@ -166,10 +215,6 @@ public:
 
         simulateStep();
 
-        /*glPushAttrib(GL_ENABLE_BIT);  // dashed
-        glLineStipple(4, 0xAAAA);
-        glEnable(GL_LINE_STIPPLE);*/
-
         glColor3ub(255, 0, 0);
         computeAndDraw({{1, 0, 0}});
 
@@ -178,8 +223,6 @@ public:
 
         glColor3ub(0, 0, 255);
         computeAndDraw({{0, 0, 1}});
-
-        //glPopAttrib();
 
     }
 

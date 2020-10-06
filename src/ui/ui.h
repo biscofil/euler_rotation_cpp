@@ -53,12 +53,6 @@ public:
 
     /**
      *
-     * @param v
-     */
-    static void drawVector(const vec<double, 3> &v);
-
-    /**
-     *
      */
     static void drawOverlay();
 

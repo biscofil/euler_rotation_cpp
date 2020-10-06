@@ -62,11 +62,17 @@ UI::UI(int argc, char **argv, std::shared_ptr<Simulation> s) {
     glutMainLoop();
 }
 
+/**
+ *
+ */
 void UI::idle(int) {
     glutPostRedisplay();
     glutTimerFunc(1000 / FPS, idle, 0);
 }
 
+/**
+ *
+ */
 void UI::drawOverlay() {
 
     bool lightingOn = glIsEnabled(GL_LIGHTING);
@@ -141,28 +147,6 @@ void UI::drawOverlay() {
     glPopAttrib();
 
     if (lightingOn) glEnable(GL_LIGHTING);
-}
-
-/**
-     *
-     * @param v
-     */
-void UI::drawVector(const vec<double, 3> &v) {
-    glBegin(GL_LINES);
-    glVertex3f(0, 0, 0);
-    glVertex3f(X(v), Y(v), Z(v));
-    glEnd();
-
-    glPushAttrib(GL_ENABLE_BIT);  // dashed
-    glLineStipple(4, 0xAAAA);
-    glEnable(GL_LINE_STIPPLE);
-
-    glBegin(GL_LINES);
-    glVertex3f(X(v), Y(v), Z(v));
-    glVertex3f(X(v), 0, Z(v));
-    glEnd();
-
-    glPopAttrib();
 }
 
 /**
@@ -245,6 +229,10 @@ void UI::computeEyePosition(const float _deltaMove[3]) {
     eye[2] += _deltaMove[2] * look[2] * 0.1f;
 }
 
+/**
+ *
+ * @param _deltaAngle
+ */
 void UI::computeDir(float _deltaAngle) {
 
     angle += _deltaAngle;
@@ -252,6 +240,9 @@ void UI::computeDir(float _deltaAngle) {
     look[2] = -std::cos(angle);
 }
 
+/**
+ *
+ */
 void UI::renderScene() {
 
     /*if (deltaMove)
@@ -290,6 +281,11 @@ void UI::renderScene() {
 
 }
 
+/**
+ *
+ * @param w
+ * @param h
+ */
 void UI::changeSize(int w, int h) {
 
     // Prevent a divide by zero, when window is too short
@@ -314,10 +310,26 @@ void UI::changeSize(int w, int h) {
     glMatrixMode(GL_MODELVIEW);
 }
 
+/**
+ *
+ * @param key
+ * @param xx
+ * @param yy
+ */
 void UI::pressKey(int key, int xx, int yy) {}
 
+/**
+ *
+ * @param key
+ * @param x
+ * @param y
+ */
 void UI::releaseKey(int key, int x, int y) {}
 
+/**
+ *
+ * @param scale
+ */
 void UI::zoom(float scale) {
     eye[0] = look[0] + ((eye[0] - look[0]) * scale);
     eye[1] = look[1] + ((eye[1] - look[1]) * scale);

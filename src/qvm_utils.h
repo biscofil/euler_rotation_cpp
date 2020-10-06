@@ -45,6 +45,7 @@ inline quat<double> vect4_to_quat(const vec<double, 4> &v) {
 inline vec<double, 4> quat_to_vect4(const quat<double> &q) {
     return {{S(q), X(q), Y(q), Z(q)}};
 }
+
 /*
 vec<double, 3> to_euler(quat<double> q) {
 

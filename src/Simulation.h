@@ -60,10 +60,15 @@ public:
      */
     void simulateStep() {
 
-        X(alpha) = std::sin(t);
-        Y(alpha) = std::cos(t);
-
         t += deltaT;
+
+        X(alpha) = 0;
+        Y(alpha) = 0;
+        if (t < 4) {
+            X(alpha) = std::sin(t);
+        } else if (t > 6 && t < 8) {
+            Y(alpha) = std::sin(t);
+        }
 
         omega += alpha * deltaT;
 
@@ -103,9 +108,16 @@ public:
         glVertex3f(0, 0, 10);
         glEnd();
 
+        // Enable lighting
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+
         glColor3ub(100, 100, 100);
         //glutWireCube(10);
         glutSolidTeapot(5);
+
+        glDisable(GL_LIGHTING);
+        glDisable(GL_LIGHT0);
 
         glPopMatrix();
 

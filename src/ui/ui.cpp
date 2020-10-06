@@ -3,7 +3,7 @@
 //
 
 #include "ui.h"
-#include "Simulation.h"
+#include "../Simulation.h"
 
 std::shared_ptr<Simulation> UI::simulation = nullptr;
 
@@ -92,11 +92,28 @@ void UI::drawOverlay() {
 
     //glBindTexture(GL_TEXTURE_2D, currentTexture);
 
-    // Print time
     glColor3f(1, 1, 1);
 
+    // Print time
     glRasterPos2f(-1, -1);
-    //glutPrintStr("T:" + std::to_string(simulation->t.v()));
+    glutPrintStr("T:" + std::to_string(simulation->t));
+
+    // Print Alpha
+    glRasterPos2f(-1, 0.9);
+    glutPrintStr("Alpha X: " + std::to_string(X(simulation->alpha)));
+    glRasterPos2f(-1, 0.85);
+    glutPrintStr("Alpha Y: " + std::to_string(Y(simulation->alpha)));
+    glRasterPos2f(-1, 0.8);
+    glutPrintStr("Alpha Z: " + std::to_string(Z(simulation->alpha)));
+
+    // Print Omega
+    glRasterPos2f(-1, 0.7);
+    glutPrintStr("Omega X: " + std::to_string(X(simulation->omega)));
+    glRasterPos2f(-1, 0.65);
+    glutPrintStr("Omega Y: " + std::to_string(Y(simulation->omega)));
+    glRasterPos2f(-1, 0.6);
+    glutPrintStr("Omega Z: " + std::to_string(Z(simulation->omega)));
+
 
     glDisable(GL_TEXTURE_2D);
 

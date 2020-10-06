@@ -10,7 +10,8 @@
 #include <iostream>
 #include <GL/gl.h>
 #include "qvm_utils.h"
-#include "ui.h"
+#include "ui/ui.h"
+#include "ui/uiHelper.h"
 
 using namespace boost::qvm;
 using namespace std;
@@ -82,7 +83,7 @@ public:
 
         simulateStep();
 
-        UI::pushQuaternionRotationMatrix(theta_quat);
+        glPushQuaternionRotationMatrix(theta_quat);
 
         glColor3ub(255, 0, 0);
         glBegin(GL_LINES);

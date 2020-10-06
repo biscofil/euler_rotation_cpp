@@ -2,7 +2,7 @@
 #include <memory>
 #include <thread>
 #include "Simulation.h"
-#include "ui.h"
+#include "ui/ui.h"
 
 /**
  *

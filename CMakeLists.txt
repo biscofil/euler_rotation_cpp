@@ -7,12 +7,14 @@ project(${TARGET_NAME})
 set(CMAKE_CXX_STANDARD 14)
 
 add_executable(${TARGET_NAME}
-        qvm_utils.h
-        ui.h
-        Simulation.h
-        ui.cpp
-        Simulation.cpp
-        main.cpp
+        src/qvm_utils.h
+        src/ui/ui.h
+        src/ui/ui.cpp
+        src/ui/uiHelper.h
+        src/ui/uiHelper.cpp
+        src/Simulation.h
+        src/Simulation.cpp
+        src/main.cpp
         )
 
 find_package(OpenGL REQUIRED)

@@ -68,34 +68,6 @@ public:
     static void drawGrid();
 
     /**
-     *
-     */
-    static void pushQuaternionRotationMatrix(const quat<double> &q) {
-        glPushMatrix();
-
-        // turn the quaternion into a rotation matrix
-        GLfloat d = S(q);
-        GLfloat a = X(q);
-        GLfloat b = Y(q);
-        GLfloat c = Z(q);
-
-        GLfloat d_sq = std::pow(d, 2);
-        GLfloat a_sq = std::pow(a, 2);
-        GLfloat b_sq = std::pow(b, 2);
-        GLfloat c_sq = std::pow(c, 2);
-
-        GLfloat rot_matrix[4][4] = {
-                {d_sq + a_sq - b_sq - c_sq, 2 * a * b - 2 * c * d,     2 * a * c + 2 * b * d,     0},
-                {2 * a * b + 2 * c * d,     d_sq - a_sq + b_sq - c_sq, 2 * b * c - 2 * a * d,     0},
-                {2 * a * c - 2 * b * d,     2 * b * c + 2 * a * d,     d_sq - a_sq - b_sq + c_sq, 0},
-                {0,                         0,                         0,                         1}
-        };
-
-        // multiply it with the top of the stack
-        glMultMatrixf((GLfloat *) rot_matrix);
-    }
-
-    /**
      * Compute the new camera pos when moving in a direction
      * @param _deltaMove
      */

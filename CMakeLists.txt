@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 14)
 add_executable(${TARGET_NAME} main.cpp
         ui.h
         Simulation.h
+        ui.cpp
         Simulation.cpp
         )
 

@@ -21,6 +21,15 @@ using namespace std;
  */
 class Simulation {
 
+    const double width = 1;
+    const double height = 2;
+    const double depth = 3;
+
+    const double mass = 5;
+
+    const mat<double, 3, 3> I; // moment of inertia
+
+    const mat<double, 3, 3> invI;
 public:
 
     float t = 0;
@@ -29,11 +38,29 @@ public:
     quat<double> theta_quat = vect3_to_quat({{0, 0, 0}}, 1);
     vec<double, 3> omega = {{0, 0, 0}}; // rotational velocity
     vec<double, 3> alpha = {{0, 0.0, 0}}; // rotational acceleration
+    vec<double, 3> torque = {{0, 0, 0}}; // torque
 
     mat<double, 4, 4> M_quat;
 
-    Simulation() {
+    Simulation() : I({{
+                              {Mx(), 0, 0},
+                              {0, My(), 0},
+                              {0, 0, Mz()}
+                      }}),
+                   invI(inverse(I)) {
         normalize(theta_quat);
+    }
+
+    constexpr double Mx() const {
+        return (1.0 / 12.0) * mass * (std::pow(width, 2) + std::pow(height, 2));
+    }
+
+    constexpr double My() const {
+        return (1.0 / 12.0) * mass * (std::pow(depth, 2) + std::pow(height, 2));
+    }
+
+    constexpr double Mz() const {
+        return (1.0 / 12.0) * mass * (std::pow(depth, 2) + std::pow(width, 2));
     }
 
     /**
@@ -62,13 +89,15 @@ public:
 
         t += deltaT;
 
-        X(alpha) = 0;
-        Y(alpha) = 0;
+        X(torque) = 0;
+        Y(torque) = 0;
         if (t < 4) {
-            X(alpha) = std::sin(t);
+            X(torque) = std::sin(t) * 3;
         } else if (t > 6 && t < 8) {
-            Y(alpha) = std::sin(t);
+            Y(torque) = std::sin(t) * 2;
         }
+
+        alpha = invI * torque;
 
         omega += alpha * deltaT;
 
@@ -88,7 +117,7 @@ public:
 
         simulateStep();
 
-        glPushQuaternionRotationMatrix(theta_quat);
+        glPushQuaternionRotationMatrix(theta_quat); // rot
 
         glColor3ub(255, 0, 0);
         glBegin(GL_LINES);
@@ -113,13 +142,18 @@ public:
         glEnable(GL_LIGHT0);
 
         glColor3ub(100, 100, 100);
-        //glutWireCube(10);
-        glutSolidTeapot(5);
+
+        glPushMatrix(); // scale
+        glScaled(width, height, depth);
+
+        glutSolidCube(1);
+
+        glPopMatrix(); // scale
 
         glDisable(GL_LIGHTING);
         glDisable(GL_LIGHT0);
 
-        glPopMatrix();
+        glPopMatrix(); // rot
 
     }
 
